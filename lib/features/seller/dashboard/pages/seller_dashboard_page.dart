@@ -183,16 +183,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
-                child: Text(
-                  user?.name.isNotEmpty == true 
-                      ? user!.name[0].toUpperCase() 
-                      : 'S',
-                  style: TextStyles.h5.copyWith(color: AppColors.primary),
-                ),
-              ),
+              _buildHeaderAvatar(user),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -346,6 +337,36 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                   ? user!.name[0].toUpperCase() 
                   : 'S',
               style: TextStyles.h2.copyWith(color: AppColors.secondary),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildHeaderAvatar(dynamic user) {
+    ImageProvider? avatarImage;
+    
+    if (user?.avatar != null && user!.avatar.isNotEmpty) {
+      final avatarPath = user.avatar as String;
+      if (avatarPath.startsWith('http')) {
+        avatarImage = NetworkImage(avatarPath);
+      } else {
+        final file = File(avatarPath);
+        if (file.existsSync()) {
+          avatarImage = FileImage(file);
+        }
+      }
+    }
+    
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+      backgroundImage: avatarImage,
+      child: avatarImage == null
+          ? Text(
+              user?.name?.isNotEmpty == true 
+                  ? user!.name[0].toUpperCase() 
+                  : 'S',
+              style: TextStyles.h5.copyWith(color: AppColors.primary),
             )
           : null,
     );

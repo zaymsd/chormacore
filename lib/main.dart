@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/routes/app_routes.dart';
 
@@ -29,6 +30,7 @@ import 'features/buyer/checkout/pages/checkout_page.dart';
 import 'features/buyer/orders/pages/order_list_page.dart';
 import 'features/buyer/orders/pages/order_detail_page.dart';
 import 'features/buyer/wishlist/pages/wishlist_page.dart';
+import 'features/buyer/product_detail/pages/product_detail_page.dart';
 import 'features/seller/dashboard/pages/seller_dashboard_page.dart';
 import 'features/seller/products/pages/seller_product_list_page.dart';
 import 'features/seller/products/pages/add_edit_product_page.dart';
@@ -36,6 +38,9 @@ import 'features/seller/orders/pages/seller_order_list_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize date formatting for Indonesian locale
+  await initializeDateFormatting('id_ID', null);
   
   // Initialize database for desktop platforms only
   if (!kIsWeb) {
@@ -104,11 +109,21 @@ class ChromaCoreApp extends StatelessWidget {
                 final section = pathSegments[0];
                 final type = pathSegments[1];
                 
+                // /buyer/product/:id - Product Detail
+                if (section == 'buyer' && type == 'product' && pathSegments.length > 2) {
+                  return MaterialPageRoute(
+                    builder: (_) => ProductDetailPage(productId: pathSegments[2]),
+                  );
+                }
+                
+                // /buyer/orders/:id - Order Detail
                 if (section == 'buyer' && type == 'orders' && pathSegments.length > 2) {
                   return MaterialPageRoute(
                     builder: (_) => OrderDetailPage(orderId: pathSegments[2]),
                   );
                 }
+                
+                // /seller/products/edit/:id - Edit Product
                 if (section == 'seller' && type == 'products' && 
                     pathSegments.length >= 4 && pathSegments[2] == 'edit') {
                   return MaterialPageRoute(

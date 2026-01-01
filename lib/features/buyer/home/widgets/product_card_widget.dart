@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/text_styles.dart';
@@ -47,13 +48,7 @@ class ProductCardWidget extends StatelessWidget {
                   ),
                   child: AspectRatio(
                     aspectRatio: 1,
-                    child: product.firstImage != null
-                        ? Image.network(
-                            product.firstImage!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _buildPlaceholder(),
-                          )
-                        : _buildPlaceholder(),
+                    child: _buildProductImage(),
                   ),
                 ),
                 // Favorite button
@@ -156,12 +151,38 @@ class ProductCardWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildProductImage() {
+    final imagePath = product.firstImage;
+    
+    if (imagePath == null || imagePath.isEmpty) {
+      return _buildPlaceholder();
+    }
+    
+    if (imagePath.startsWith('http')) {
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+      );
+    } else {
+      final file = File(imagePath);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildPlaceholder(),
+        );
+      }
+    }
+    return _buildPlaceholder();
+  }
+
   Widget _buildPlaceholder() {
     return Container(
       color: AppColors.surfaceVariant,
       child: const Center(
         child: Icon(
-          Icons.image_outlined,
+          Icons.computer,
           size: 40,
           color: AppColors.textHint,
         ),

@@ -152,6 +152,15 @@ class ProductRepository {
     return await updateStock(productId, product.stock - quantity);
   }
 
+  /// Increase stock (for order cancellation)
+  Future<bool> increaseStock(String productId, int quantity) async {
+    final product = await getProductById(productId);
+    if (product == null) {
+      return false;
+    }
+    return await updateStock(productId, product.stock + quantity);
+  }
+
   /// Update product rating
   Future<bool> updateRating(String productId, double newRating, int ratingCount) async {
     final result = await _db.update(

@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../../../../data/models/order_model.dart';
 import '../../../../data/repositories/order_repository.dart';
+import '../../../../data/repositories/product_repository.dart';
 
 /// Provider for buyer order management
 class OrderProvider extends ChangeNotifier {
   final OrderRepository _orderRepository = OrderRepository();
+  final ProductRepository _productRepository = ProductRepository();
 
   List<OrderModel> _orders = [];
   OrderModel? _selectedOrder;
@@ -42,6 +44,12 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
+  /// Load orders for buyer (alias)
+  Future<void> loadBuyerOrders(String userId) async {
+    _userId = userId;
+    await loadOrders();
+  }
+
   /// Get order by ID
   Future<void> getOrderDetail(String orderId) async {
     _setLoading(true);
@@ -56,14 +64,24 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  /// Cancel order
+  /// Cancel order and restore stock
   Future<bool> cancelOrder(String orderId) async {
     _setLoading(true);
     _clearError();
 
     try {
+      // Get order details first to restore stock
+      final order = await _orderRepository.getOrderById(orderId);
+      if (order == null) return false;
+
+      // Cancel order
       final success = await _orderRepository.cancelOrder(orderId);
+      
       if (success) {
+        // Restore stock for each item
+        for (var item in order.items) {
+          await _productRepository.increaseStock(item.productId, item.quantity);
+        }
         await loadOrders();
       }
       return success;

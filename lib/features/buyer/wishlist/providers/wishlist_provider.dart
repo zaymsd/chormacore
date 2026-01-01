@@ -67,6 +67,13 @@ class WishlistProvider extends ChangeNotifier {
     }
   }
 
+  /// Add to wishlist
+  Future<bool> addToWishlist(String productId) async {
+    if (_userId == null) return false;
+    if (_productIds.contains(productId)) return true; // Already in wishlist
+    return await toggleWishlist(productId);
+  }
+
   /// Remove from wishlist
   Future<bool> removeFromWishlist(String wishlistId) async {
     _setLoading(true);
