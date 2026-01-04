@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import '../../core/constants/db_constants.dart';
 import '../database/database_helper.dart';
@@ -57,6 +58,25 @@ class WishlistRepository {
     return result > 0;
   }
 
+  /// Parse images from database
+  List<String> _parseImages(dynamic imagesData) {
+    if (imagesData == null) return [];
+    if (imagesData is String) {
+      try {
+        final decoded = json.decode(imagesData);
+        if (decoded is List) {
+          return decoded.map((e) => e.toString()).toList();
+        }
+      } catch (e) {
+        return imagesData.isNotEmpty ? [imagesData] : [];
+      }
+    }
+    if (imagesData is List) {
+      return imagesData.map((e) => e.toString()).toList();
+    }
+    return [];
+  }
+
   /// Get wishlist by user with product details
   Future<List<WishlistModel>> getWishlistByUser(String userId) async {
     final results = await _db.rawQuery('''
@@ -88,6 +108,7 @@ class WishlistRepository {
         description: map['product_description'] as String?,
         price: (map['product_price'] as num).toDouble(),
         stock: map['product_stock'] as int,
+        images: _parseImages(map['product_images']),
         rating: (map['product_rating'] as num?)?.toDouble() ?? 0,
         ratingCount: map['product_rating_count'] as int? ?? 0,
         isActive: (map['product_is_active'] as int?) == 1,

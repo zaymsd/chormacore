@@ -10,6 +10,7 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../wishlist/providers/wishlist_provider.dart';
 import '../../orders/providers/order_provider.dart';
+import '../../orders/pages/order_list_page.dart';
 import '../providers/product_list_provider.dart';
 import '../widgets/product_card_widget.dart';
 import '../widgets/category_chip_widget.dart';
@@ -312,131 +313,8 @@ class _BuyerHomePageState extends State<BuyerHomePage> {
   }
 
   Widget _buildOrdersPage() {
-    return Consumer<OrderProvider>(
-      builder: (context, orderProvider, _) {
-        if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
-          return const LoadingWidget(message: 'Memuat pesanan...');
-        }
-
-        if (orderProvider.orders.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.receipt_long_outlined, size: 80, color: Colors.grey[300]),
-                const SizedBox(height: 16),
-                Text('Belum Ada Pesanan', style: TextStyles.h5),
-                const SizedBox(height: 8),
-                Text(
-                  'Pesanan Anda akan muncul di sini',
-                  style: TextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: orderProvider.refresh,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: orderProvider.orders.length,
-            itemBuilder: (context, index) {
-              final order = orderProvider.orders[index];
-              return _buildOrderCard(order);
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOrderCard(dynamic order) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.getBuyerOrderDetailRoute(order.id),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Order #${order.id.toString().substring(0, 8).toUpperCase()}',
-                  style: TextStyles.labelMedium,
-                ),
-                _buildStatusBadge(order.status),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Total: ${CurrencyFormatter.format(order.total)}',
-              style: TextStyles.priceMedium,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color bgColor;
-    Color textColor;
-    String label;
-
-    switch (status) {
-      case 'pending':
-        bgColor = AppColors.warning.withValues(alpha: 0.1);
-        textColor = AppColors.warning;
-        label = 'Menunggu';
-        break;
-      case 'processing':
-        bgColor = AppColors.info.withValues(alpha: 0.1);
-        textColor = AppColors.info;
-        label = 'Diproses';
-        break;
-      case 'shipped':
-        bgColor = AppColors.secondary.withValues(alpha: 0.1);
-        textColor = AppColors.secondary;
-        label = 'Dikirim';
-        break;
-      case 'delivered':
-        bgColor = AppColors.success.withValues(alpha: 0.1);
-        textColor = AppColors.success;
-        label = 'Selesai';
-        break;
-      default:
-        bgColor = AppColors.surfaceVariant;
-        textColor = AppColors.textSecondary;
-        label = status;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(label, style: TextStyles.caption.copyWith(color: textColor)),
-    );
+    // Use the OrderListPage widget which has filters
+    return const OrderListPage();
   }
 
   Widget _buildProfilePage() {

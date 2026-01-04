@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                       
                       // Title
                       const Text(
-                        'TechZone',
+                        'ChormaCore',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Komputer & Aksesoris',
+                        'Upgrade Hidupmu, Upgrade Teknologimu',
                         style: TextStyle(
                           fontSize: 14,
                           color: Color(0xFF6B7280),

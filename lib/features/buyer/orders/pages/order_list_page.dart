@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +13,7 @@ import '../../../../data/models/order_model.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../providers/order_provider.dart';
 
-/// Buyer order list page with date filter
+/// Buyer order list page with dropdown filters
 class OrderListPage extends StatefulWidget {
   const OrderListPage({super.key});
 
@@ -20,24 +21,23 @@ class OrderListPage extends StatefulWidget {
   State<OrderListPage> createState() => _OrderListPageState();
 }
 
-class _OrderListPageState extends State<OrderListPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _OrderListPageState extends State<OrderListPage> {
   DateTime? _startDate;
   DateTime? _endDate;
+  String? _selectedStatus;
   
-  final _tabs = [
-    {'label': 'Semua', 'status': null},
-    {'label': 'Pending', 'status': 'pending'},
-    {'label': 'Diproses', 'status': 'processing'},
-    {'label': 'Dikirim', 'status': 'shipped'},
-    {'label': 'Selesai', 'status': 'delivered'},
-    {'label': 'Dibatalkan', 'status': 'cancelled'},
+  final List<Map<String, dynamic>> _statusOptions = [
+    {'value': null, 'label': 'Semua Status'},
+    {'value': 'pending', 'label': 'Menunggu'},
+    {'value': 'processing', 'label': 'Diproses'},
+    {'value': 'shipped', 'label': 'Dikirim'},
+    {'value': 'delivered', 'label': 'Selesai'},
+    {'value': 'cancelled', 'label': 'Dibatalkan'},
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadOrders();
     });
@@ -51,15 +51,25 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
     }
   }
 
-  List<OrderModel> _filterByDate(List<OrderModel> orders) {
-    if (_startDate == null && _endDate == null) return orders;
+  List<OrderModel> _applyFilters(List<OrderModel> orders) {
+    var filtered = orders;
     
-    return orders.where((order) {
-      final orderDate = order.createdAt;
-      if (_startDate != null && orderDate.isBefore(_startDate!)) return false;
-      if (_endDate != null && orderDate.isAfter(_endDate!.add(const Duration(days: 1)))) return false;
-      return true;
-    }).toList();
+    // Filter by status
+    if (_selectedStatus != null) {
+      filtered = filtered.where((o) => o.status == _selectedStatus).toList();
+    }
+    
+    // Filter by date
+    if (_startDate != null || _endDate != null) {
+      filtered = filtered.where((order) {
+        final orderDate = order.createdAt;
+        if (_startDate != null && orderDate.isBefore(_startDate!)) return false;
+        if (_endDate != null && orderDate.isAfter(_endDate!.add(const Duration(days: 1)))) return false;
+        return true;
+      }).toList();
+    }
+    
+    return filtered;
   }
 
   Future<void> _selectDateRange() async {
@@ -88,17 +98,12 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
     }
   }
 
-  void _clearDateFilter() {
+  void _clearFilters() {
     setState(() {
       _startDate = null;
       _endDate = null;
+      _selectedStatus = null;
     });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
@@ -108,109 +113,149 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       appBar: AppBar(
         title: const Text('Pesanan Saya'),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.calendar_month,
-              color: (_startDate != null || _endDate != null) 
-                  ? AppColors.primary 
-                  : null,
+          if (_startDate != null || _endDate != null || _selectedStatus != null)
+            IconButton(
+              icon: const Icon(Icons.filter_alt_off),
+              onPressed: _clearFilters,
+              tooltip: 'Hapus Filter',
             ),
-            onPressed: _selectDateRange,
-            tooltip: 'Filter tanggal',
+        ],
+      ),
+      body: Column(
+        children: [
+          // Filter Header
+          _buildFilterHeader(),
+          
+          // Order List
+          Expanded(
+            child: Consumer<OrderProvider>(
+              builder: (context, orderProvider, _) {
+                if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
+                  return const LoadingWidget(message: 'Memuat pesanan...');
+                }
+
+                final filteredOrders = _applyFilters(orderProvider.orders);
+
+                if (filteredOrders.isEmpty) {
+                  return const EmptyOrderWidget();
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async => _loadOrders(),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredOrders.length,
+                    itemBuilder: (context, index) {
+                      return _buildOrderCard(filteredOrders[index]);
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(_startDate != null ? 90 : 46),
-          child: Column(
-            children: [
-              // Date filter indicator
-              if (_startDate != null) _buildDateFilterChip(),
-              // Status tabs
-              TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                tabs: _tabs.map((tab) => Tab(text: tab['label'] as String)).toList(),
-                labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.textSecondary,
-                indicatorColor: AppColors.primary,
-              ),
-            ],
-          ),
-        ),
-      ),
-      body: Consumer<OrderProvider>(
-        builder: (context, orderProvider, _) {
-          if (orderProvider.isLoading && orderProvider.orders.isEmpty) {
-            return const LoadingWidget(message: 'Memuat pesanan...');
-          }
-
-          return TabBarView(
-            controller: _tabController,
-            children: _tabs.map((tab) {
-              final status = tab['status'] as String?;
-              var filteredOrders = status == null
-                  ? orderProvider.orders
-                  : orderProvider.orders.where((o) => o.status == status).toList();
-
-              // Apply date filter
-              filteredOrders = _filterByDate(filteredOrders);
-
-              if (filteredOrders.isEmpty) {
-                return const EmptyOrderWidget();
-              }
-
-              return RefreshIndicator(
-                onRefresh: () async => _loadOrders(),
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredOrders.length,
-                  itemBuilder: (context, index) {
-                    return _buildOrderCard(filteredOrders[index]);
-                  },
-                ),
-              );
-            }).toList(),
-          );
-        },
       ),
     );
   }
 
-  Widget _buildDateFilterChip() {
-    final dateFormat = DateFormat('dd MMM yyyy', 'id_ID');
-    final startStr = _startDate != null ? dateFormat.format(_startDate!) : '';
-    final endStr = _endDate != null ? dateFormat.format(_endDate!) : '';
+  Widget _buildFilterHeader() {
+    final dateFormat = DateFormat('dd/MM/yy', 'id_ID');
+    String dateLabel = 'Pilih Tanggal';
+    if (_startDate != null && _endDate != null) {
+      dateLabel = '${dateFormat.format(_startDate!)} - ${dateFormat.format(_endDate!)}';
+    }
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Icon(Icons.filter_list, size: 16, color: AppColors.primary),
-          const SizedBox(width: 8),
+          // Date Filter Dropdown
           Expanded(
-            child: Text(
-              '$startStr - $endStr',
-              style: TextStyles.caption.copyWith(color: AppColors.primary),
+            child: GestureDetector(
+              onTap: _selectDateRange,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(8),
+                  color: _startDate != null ? AppColors.primary.withValues(alpha: 0.05) : null,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: _startDate != null ? AppColors.primary : AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        dateLabel,
+                        style: TextStyles.bodySmall.copyWith(
+                          color: _startDate != null ? AppColors.primary : AppColors.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (_startDate != null)
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          _startDate = null;
+                          _endDate = null;
+                        }),
+                        child: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
-          GestureDetector(
-            onTap: _clearDateFilter,
+          const SizedBox(width: 12),
+          
+          // Status Filter Dropdown
+          Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(8),
+                color: _selectedStatus != null ? AppColors.primary.withValues(alpha: 0.05) : null,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.close, size: 14, color: AppColors.error),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Hapus Filter',
-                    style: TextStyles.caption.copyWith(color: AppColors.error),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String?>(
+                  value: _selectedStatus,
+                  isExpanded: true,
+                  hint: Text(
+                    'Status',
+                    style: TextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                   ),
-                ],
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                  style: TextStyles.bodySmall.copyWith(
+                    color: _selectedStatus != null ? AppColors.primary : AppColors.textPrimary,
+                  ),
+                  items: _statusOptions.map((option) {
+                    return DropdownMenuItem<String?>(
+                      value: option['value'],
+                      child: Text(
+                        option['label'],
+                        style: TextStyles.bodySmall,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedStatus = value);
+                  },
+                ),
               ),
             ),
           ),
@@ -229,7 +274,6 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
@@ -242,74 +286,149 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Order #${order.id.substring(0, 8).toUpperCase()}',
-                  style: TextStyles.labelMedium,
-                ),
-                _buildStatusBadge(order.status),
-              ],
-            ),
-            const SizedBox(height: 8),
-            
-            // Date
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
-                const SizedBox(width: 4),
-                Text(
-                  DateFormatter.formatDateTime(order.createdAt),
-                  style: TextStyles.caption.copyWith(color: AppColors.textSecondary),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            
-            // Seller
-            if (order.sellerName != null)
-              Row(
+            // Header - Order ID & Status
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
                 children: [
-                  const Icon(Icons.store, size: 14, color: AppColors.textSecondary),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '#${order.id.substring(0, 8).toUpperCase()}',
+                          style: TextStyles.labelLarge,
+                        ),
+                        if (order.sellerName != null)
+                          Text(
+                            order.sellerName!,
+                            style: TextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusBadge(order.status),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+
+            // Items with photos
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  ...order.items.take(2).map((item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        // Product Image
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            width: 50,
+                            height: 50,
+                            color: AppColors.surfaceVariant,
+                            child: _buildProductImage(item.productImage),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Product Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.productName,
+                                style: TextStyles.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                '${item.quantity}x ${CurrencyFormatter.format(item.price)}',
+                                style: TextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          CurrencyFormatter.format(item.subtotal),
+                          style: TextStyles.labelSmall,
+                        ),
+                      ],
+                    ),
+                  )),
+                  if (order.items.length > 2)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        '+${order.items.length - 2} produk lainnya',
+                        style: TextStyles.caption.copyWith(color: AppColors.primary),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+
+            // Footer - Date & Total
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
                   const SizedBox(width: 4),
-                  Text(
-                    order.sellerName!,
-                    style: TextStyles.caption.copyWith(color: AppColors.textSecondary),
+                  Expanded(
+                    child: Text(
+                      DateFormatter.formatDateTime(order.createdAt),
+                      style: TextStyles.caption.copyWith(color: AppColors.textSecondary),
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('Total', style: TextStyles.caption),
+                      Text(
+                        CurrencyFormatter.format(order.total),
+                        style: TextStyles.priceMedium,
+                      ),
+                    ],
                   ),
                 ],
               ),
-            
-            const Divider(height: 24),
-            
-            // Items Summary
-            if (order.items.isNotEmpty)
-              Text(
-                order.items.map((i) => '${i.quantity}x ${i.productName}').join(', '),
-                style: TextStyles.bodySmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            
-            const SizedBox(height: 12),
-            
-            // Total
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Total Pembayaran', style: TextStyles.caption),
-                Text(
-                  CurrencyFormatter.format(order.total),
-                  style: TextStyles.priceMedium,
-                ),
-              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProductImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return const Center(
+        child: Icon(Icons.computer, size: 24, color: AppColors.textHint),
+      );
+    }
+    
+    if (imagePath.startsWith('http')) {
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 24),
+      );
+    } else {
+      final file = File(imagePath);
+      if (file.existsSync()) {
+        return Image.file(file, fit: BoxFit.cover);
+      }
+    }
+    return const Center(
+      child: Icon(Icons.computer, size: 24, color: AppColors.textHint),
     );
   }
 
@@ -358,7 +477,7 @@ class _OrderListPageState extends State<OrderListPage> with SingleTickerProvider
       ),
       child: Text(
         label,
-        style: TextStyles.caption.copyWith(color: textColor, fontWeight: FontWeight.w500),
+        style: TextStyles.labelSmall.copyWith(color: textColor, fontWeight: FontWeight.w500),
       ),
     );
   }
