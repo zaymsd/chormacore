@@ -36,6 +36,8 @@ import 'features/seller/products/pages/seller_product_list_page.dart';
 import 'features/seller/products/pages/add_edit_product_page.dart';
 import 'features/seller/orders/pages/seller_order_list_page.dart';
 import 'features/buyer/orders/pages/add_review_page.dart';
+import 'features/guest/pages/guest_browse_page.dart';
+import 'features/splash/pages/splash_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,9 +77,13 @@ class ChromaCoreApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6366F1)),
           useMaterial3: true,
         ),
-        home: const LoginPage(),
+        home: const SplashPage(),
         onGenerateRoute: (settings) {
           switch (settings.name) {
+            case AppRoutes.splash:
+              return MaterialPageRoute(builder: (_) => const SplashPage());
+            case AppRoutes.guestBrowse:
+              return MaterialPageRoute(builder: (_) => const GuestBrowsePage());
             case AppRoutes.login:
               return MaterialPageRoute(builder: (_) => const LoginPage());
             case AppRoutes.register:

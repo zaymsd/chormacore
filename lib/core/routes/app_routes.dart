@@ -10,6 +10,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String editProfile = '/edit-profile';
+  static const String guestBrowse = '/guest/browse';
 
   // Buyer Routes
   static const String buyerHome = '/buyer/home';
