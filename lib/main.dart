@@ -35,6 +35,7 @@ import 'features/seller/dashboard/pages/seller_dashboard_page.dart';
 import 'features/seller/products/pages/seller_product_list_page.dart';
 import 'features/seller/products/pages/add_edit_product_page.dart';
 import 'features/seller/orders/pages/seller_order_list_page.dart';
+import 'features/buyer/orders/pages/add_review_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,8 +119,25 @@ class ChromaCoreApp extends StatelessWidget {
                 
                 // /buyer/orders/:id - Order Detail
                 if (section == 'buyer' && type == 'orders' && pathSegments.length > 2) {
+                  // Check if it's a review route: /buyer/orders/:orderId/review/:productId
+                  if (pathSegments.length >= 5 && pathSegments[3] == 'review') {
+                    return MaterialPageRoute(
+                      builder: (_) => AddReviewPage(
+                        orderId: pathSegments[2],
+                        orderItem: (settings.arguments as Map<String, dynamic>)['orderItem'],
+                      ),
+                      settings: settings,
+                    );
+                  }
                   return MaterialPageRoute(
                     builder: (_) => OrderDetailPage(orderId: pathSegments[2]),
+                  );
+                }
+                
+                // /seller/product/:id - Seller Product Detail
+                if (section == 'seller' && type == 'product' && pathSegments.length > 2) {
+                  return MaterialPageRoute(
+                    builder: (_) => ProductDetailPage(productId: pathSegments[2]),
                   );
                 }
                 

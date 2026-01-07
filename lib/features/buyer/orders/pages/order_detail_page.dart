@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -7,6 +8,8 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../data/models/order_model.dart';
+import '../../../../data/repositories/review_repository.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../providers/order_provider.dart';
 
 /// Order detail page showing full order information
@@ -23,12 +26,57 @@ class OrderDetailPage extends StatefulWidget {
 }
 
 class _OrderDetailPageState extends State<OrderDetailPage> {
+  final ReviewRepository _reviewRepository = ReviewRepository();
+  final Map<String, bool> _reviewedItems = {};
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<OrderProvider>(context, listen: false)
           .getOrderDetail(widget.orderId);
+    });
+  }
+
+  Future<void> _checkReviewedItems(List<OrderItemModel> items) async {
+    for (var item in items) {
+      final hasReviewed = await _reviewRepository.hasReviewed(
+        widget.orderId,
+        item.productId,
+      );
+      if (mounted) {
+        setState(() {
+          _reviewedItems[item.productId] = hasReviewed;
+        });
+      }
+    }
+  }
+
+  void _navigateToReview(OrderItemModel item) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userId = authProvider.currentUser?.id;
+    
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User tidak ditemukan')),
+      );
+      return;
+    }
+
+    Navigator.pushNamed(
+      context,
+      AppRoutes.getAddReviewRoute(widget.orderId, item.productId),
+      arguments: {
+        'orderItem': item,
+        'userId': userId,
+      },
+    ).then((result) {
+      if (result == true) {
+        // Refresh reviewed status
+        setState(() {
+          _reviewedItems[item.productId] = true;
+        });
+      }
     });
   }
 
@@ -48,6 +96,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           final order = orderProvider.selectedOrder;
           if (order == null) {
             return const Center(child: Text('Pesanan tidak ditemukan'));
+          }
+
+          // Check reviewed items for delivered orders
+          if (order.isDelivered && _reviewedItems.isEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _checkReviewedItems(order.items);
+            });
           }
 
           return Column(
@@ -223,51 +278,102 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         children: [
           Text('Produk Dipesan', style: TextStyles.labelLarge),
           const SizedBox(height: 12),
-          ...order.items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: item.productImage != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            item.productImage!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.image_outlined,
-                              color: AppColors.textHint,
-                            ),
+          ...order.items.map((item) => _buildItemRow(item, order.isDelivered)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemRow(OrderItemModel item, bool isDelivered) {
+    final hasReviewed = _reviewedItems[item.productId] ?? false;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: item.productImage != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          item.productImage!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.image_outlined,
+                            color: AppColors.textHint,
                           ),
-                        )
-                      : const Icon(Icons.image_outlined, color: AppColors.textHint),
+                        ),
+                      )
+                    : const Icon(Icons.image_outlined, color: AppColors.textHint),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.productName, style: TextStyles.bodyMedium),
+                    Text(
+                      '${item.quantity} x ${CurrencyFormatter.format(item.price)}',
+                      style: TextStyles.caption,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(item.productName, style: TextStyles.bodyMedium),
-                      Text(
-                        '${item.quantity} x ${CurrencyFormatter.format(item.price)}',
-                        style: TextStyles.caption,
-                      ),
-                    ],
+              ),
+              Text(
+                CurrencyFormatter.format(item.subtotal),
+                style: TextStyles.labelMedium,
+              ),
+            ],
+          ),
+          // Review button for delivered orders
+          if (isDelivered) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (hasReviewed)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.check_circle, size: 16, color: AppColors.success),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Sudah Direview',
+                          style: TextStyles.caption.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  TextButton.icon(
+                    onPressed: () => _navigateToReview(item),
+                    icon: const Icon(Icons.rate_review_outlined, size: 18),
+                    label: const Text('Beri Review'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    ),
                   ),
-                ),
-                Text(
-                  CurrencyFormatter.format(item.subtotal),
-                  style: TextStyles.labelMedium,
-                ),
               ],
             ),
-          )),
+          ],
         ],
       ),
     );

@@ -30,6 +30,10 @@ class AppRoutes {
   static const String sellerOrders = '/seller/orders';
   static const String sellerOrderDetail = '/seller/orders/:id';
   static const String sellerProfile = '/seller/profile';
+  static const String sellerProductDetail = '/seller/product/:id';
+
+  // Review Routes
+  static const String addReview = '/buyer/orders/:orderId/review/:productId';
 
   // Search
   static const String search = '/search';
@@ -55,6 +59,16 @@ class AppRoutes {
   /// Helper method to get edit product route with ID
   static String getEditProductRoute(String productId) {
     return '/seller/products/edit/$productId';
+  }
+
+  /// Helper method to get add review route
+  static String getAddReviewRoute(String orderId, String productId) {
+    return '/buyer/orders/$orderId/review/$productId';
+  }
+
+  /// Helper method to get seller product detail route
+  static String getSellerProductDetailRoute(String productId) {
+    return '/seller/product/$productId';
   }
 
   /// Extract ID from route

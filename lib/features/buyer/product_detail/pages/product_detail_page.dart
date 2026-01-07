@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../data/models/product_model.dart';
+import '../../../../data/models/review_model.dart';
 import '../../../../data/repositories/product_repository.dart';
+import '../../../../data/repositories/review_repository.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../cart/providers/cart_provider.dart';
 import '../../wishlist/providers/wishlist_provider.dart';
@@ -27,10 +30,13 @@ class ProductDetailPage extends StatefulWidget {
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
   ProductModel? _product;
+  List<ReviewModel> _reviews = [];
   bool _isLoading = true;
+  bool _isLoadingReviews = false;
   bool _isInWishlist = false;
   int _quantity = 1;
   int _selectedImageIndex = 0;
+  final ReviewRepository _reviewRepository = ReviewRepository();
 
   @override
   void initState() {
@@ -53,6 +59,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         
         // Check wishlist status
         _checkWishlistStatus();
+        
+        // Load reviews
+        _loadReviews();
       }
     } catch (e) {
       if (mounted) {
@@ -60,6 +69,24 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal memuat produk: $e'), backgroundColor: AppColors.error),
         );
+      }
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    setState(() => _isLoadingReviews = true);
+    
+    try {
+      final reviews = await _reviewRepository.getReviewsByProduct(widget.productId);
+      if (mounted) {
+        setState(() {
+          _reviews = reviews;
+          _isLoadingReviews = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingReviews = false);
       }
     }
   }
@@ -291,6 +318,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 ],
                               ),
                             ),
+                            
+                            const SizedBox(height: 8),
+                            
+                            // Reviews Section
+                            _buildReviewsSection(),
                           ],
                         ),
                       ),
@@ -433,6 +465,157 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildReviewsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: AppColors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with rating summary
+          Row(
+            children: [
+              Expanded(
+                child: Text('Ulasan Produk', style: TextStyles.labelLarge),
+              ),
+              if (_product != null) ...[
+                _buildRatingStars(_product!.rating),
+                const SizedBox(width: 4),
+                Text(
+                  '${_product!.rating.toStringAsFixed(1)} (${_product!.ratingCount})',
+                  style: TextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Reviews list
+          if (_isLoadingReviews)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_reviews.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.rate_review_outlined, size: 48, color: AppColors.textHint),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Belum ada ulasan',
+                      style: TextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    ),
+                    Text(
+                      'Jadilah yang pertama memberi ulasan!',
+                      style: TextStyles.caption.copyWith(color: AppColors.textHint),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Column(
+              children: _reviews.take(5).map((review) => _buildReviewCard(review)).toList(),
+            ),
+            
+          // Show more button if there are more reviews
+          if (_reviews.length > 5) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  // TODO: Navigate to all reviews page
+                },
+                child: Text('Lihat semua ${_reviews.length} ulasan'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingStars(double rating) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final starValue = index + 1;
+        if (rating >= starValue) {
+          return const Icon(Icons.star, size: 16, color: Colors.amber);
+        } else if (rating >= starValue - 0.5) {
+          return const Icon(Icons.star_half, size: 16, color: Colors.amber);
+        } else {
+          return const Icon(Icons.star_border, size: 16, color: Colors.amber);
+        }
+      }),
+    );
+  }
+
+  Widget _buildReviewCard(ReviewModel review) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // User info and rating
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                child: Text(
+                  (review.userName ?? 'U')[0].toUpperCase(),
+                  style: TextStyles.labelMedium.copyWith(color: AppColors.primary),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.userName ?? 'Pengguna',
+                      style: TextStyles.labelSmall,
+                    ),
+                    Row(
+                      children: [
+                        _buildRatingStars(review.rating.toDouble()),
+                        const SizedBox(width: 8),
+                        Text(
+                          DateFormatter.formatRelative(review.createdAt),
+                          style: TextStyles.caption.copyWith(color: AppColors.textHint),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          // Review comment
+          if (review.comment != null && review.comment!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              review.comment!,
+              style: TextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ],
       ),
     );
   }
