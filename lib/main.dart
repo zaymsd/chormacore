@@ -35,6 +35,7 @@ import 'features/seller/dashboard/pages/seller_dashboard_page.dart';
 import 'features/seller/products/pages/seller_product_list_page.dart';
 import 'features/seller/products/pages/add_edit_product_page.dart';
 import 'features/seller/orders/pages/seller_order_list_page.dart';
+import 'features/seller/orders/pages/seller_order_detail_page.dart';
 import 'features/buyer/orders/pages/add_review_page.dart';
 import 'features/guest/pages/guest_browse_page.dart';
 import 'features/splash/pages/splash_page.dart';
@@ -152,6 +153,13 @@ class ChromaCoreApp extends StatelessWidget {
                     pathSegments.length >= 4 && pathSegments[2] == 'edit') {
                   return MaterialPageRoute(
                     builder: (_) => AddEditProductPage(productId: pathSegments[3]),
+                  );
+                }
+                
+                // /seller/orders/:id - Seller Order Detail
+                if (section == 'seller' && type == 'orders' && pathSegments.length > 2) {
+                  return MaterialPageRoute(
+                    builder: (_) => SellerOrderDetailPage(orderId: pathSegments[2]),
                   );
                 }
               }

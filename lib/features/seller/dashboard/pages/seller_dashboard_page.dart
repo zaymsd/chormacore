@@ -11,8 +11,8 @@ import '../../../auth/providers/auth_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/recent_orders_widget.dart';
-import '../../products/widgets/seller_product_list_content.dart';
-import '../../orders/widgets/seller_order_list_content.dart';
+import '../../products/pages/seller_product_list_page.dart';
+import '../../orders/pages/seller_order_list_page.dart';
 
 /// Seller dashboard page with statistics and recent orders
 class SellerDashboardPage extends StatefulWidget {
@@ -214,11 +214,13 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   }
 
   Widget _buildProductsPage() {
-    return const SellerProductListContent();
+    // Use page with category filter
+    return const SellerProductListPage();
   }
 
   Widget _buildOrdersPage() {
-    return const SellerOrderListContent();
+    // Use page with date filter
+    return const SellerOrderListPage();
   }
 
   Widget _buildProfilePage() {

@@ -175,7 +175,7 @@ class EmptyProductWidget extends StatelessWidget {
   }
 }
 
-/// Alias for EmptyOrdersWidget with different parameter name
+/// Alias for EmptyOrdersWidget - for seller without button
 class EmptyOrderWidget extends StatelessWidget {
   final VoidCallback? onBrowse;
 
@@ -186,6 +186,14 @@ class EmptyOrderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // If onBrowse is null, show simple empty state without button
+    if (onBrowse == null) {
+      return const EmptyStateWidget(
+        title: 'Belum Ada Pesanan',
+        description: 'Pesanan dari pembeli akan muncul di sini.',
+        icon: Icons.receipt_long_outlined,
+      );
+    }
     return EmptyOrdersWidget(onStartShopping: onBrowse);
   }
 }
