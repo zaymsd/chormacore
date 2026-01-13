@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/themes/text_styles.dart';
@@ -413,32 +414,52 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
   }
 
   Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) => setState(() => _currentIndex = index),
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard_outlined),
-          activeIcon: Icon(Icons.dashboard),
-          label: 'Dashboard',
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 20,
+            color: Colors.black.withOpacity(0.1),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8),
+          child: GNav(
+            rippleColor: AppColors.primaryLight,
+            hoverColor: AppColors.primaryLight.withOpacity(0.1),
+            gap: 8,
+            activeColor: AppColors.primary,
+            iconSize: 24,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            duration: const Duration(milliseconds: 400),
+            tabBackgroundColor: AppColors.primaryLight.withOpacity(0.1),
+            color: AppColors.textSecondary,
+            tabs: const [
+              GButton(
+                icon: Icons.dashboard_outlined,
+                text: 'Dashboard',
+              ),
+              GButton(
+                icon: Icons.inventory_2_outlined,
+                text: 'Produk',
+              ),
+              GButton(
+                icon: Icons.receipt_long_outlined,
+                text: 'Pesanan',
+              ),
+              GButton(
+                icon: Icons.person_outline,
+                text: 'Profil',
+              ),
+            ],
+            selectedIndex: _currentIndex,
+            onTabChange: (index) => setState(() => _currentIndex = index),
+          ),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.inventory_2_outlined),
-          activeIcon: Icon(Icons.inventory_2),
-          label: 'Produk',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.receipt_long_outlined),
-          activeIcon: Icon(Icons.receipt_long),
-          label: 'Pesanan',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'Profil',
-        ),
-      ],
+      ),
     );
   }
 }
