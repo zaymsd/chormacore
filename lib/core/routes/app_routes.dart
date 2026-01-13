@@ -36,6 +36,10 @@ class AppRoutes {
   // Review Routes
   static const String addReview = '/buyer/orders/:orderId/review/:productId';
 
+  // Notification Routes
+  static const String buyerNotifications = '/buyer/notifications';
+  static const String sellerNotifications = '/seller/notifications';
+
   // Search
   static const String search = '/search';
 

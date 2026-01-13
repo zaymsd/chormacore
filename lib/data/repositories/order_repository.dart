@@ -4,11 +4,14 @@ import '../../core/constants/app_constants.dart';
 import '../database/database_helper.dart';
 import '../models/order_model.dart';
 import '../models/cart_model.dart';
+import '../models/notification_model.dart';
+import 'notification_repository.dart';
 
 /// Repository for order-related database operations
 class OrderRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
   final Uuid _uuid = const Uuid();
+  final NotificationRepository _notificationRepository = NotificationRepository();
 
   /// Create order from cart items
   Future<OrderModel> createOrder({
@@ -61,6 +64,15 @@ class OrderRepository {
         orderItems.add(orderItem);
       }
     }
+
+    // Create notification for seller about new order
+    await _notificationRepository.createNotification(
+      userId: sellerId,
+      type: NotificationType.newOrder,
+      title: 'Pesanan Baru',
+      message: 'Anda menerima pesanan baru dari pembeli',
+      relatedId: orderId,
+    );
 
     return order.copyWith(items: orderItems);
   }
@@ -153,6 +165,9 @@ class OrderRepository {
 
   /// Update order status
   Future<bool> updateOrderStatus(String orderId, String status) async {
+    // Get order to find buyer ID
+    final order = await getOrderById(orderId);
+    
     final result = await _db.update(
       DbConstants.tableOrders,
       {
@@ -162,6 +177,51 @@ class OrderRepository {
       where: 'id = ?',
       whereArgs: [orderId],
     );
+    
+    // Create notification for buyer about status change
+    if (result > 0 && order != null) {
+      String notifType;
+      String notifTitle;
+      String notifMessage;
+      
+      switch (status) {
+        case AppConstants.orderStatusProcessing:
+          notifType = NotificationType.orderConfirmed;
+          notifTitle = 'Pesanan Dikonfirmasi';
+          notifMessage = 'Pesanan Anda sedang diproses oleh penjual';
+          break;
+        case AppConstants.orderStatusShipped:
+          notifType = NotificationType.orderShipped;
+          notifTitle = 'Pesanan Dikirim';
+          notifMessage = 'Pesanan Anda sedang dalam pengiriman';
+          break;
+        case AppConstants.orderStatusDelivered:
+          notifType = NotificationType.orderDelivered;
+          notifTitle = 'Pesanan Selesai';
+          notifMessage = 'Pesanan Anda telah sampai. Terima kasih telah berbelanja!';
+          break;
+        case AppConstants.orderStatusCancelled:
+          notifType = NotificationType.orderCancelled;
+          notifTitle = 'Pesanan Dibatalkan';
+          notifMessage = 'Pesanan Anda telah dibatalkan';
+          break;
+        default:
+          notifType = '';
+          notifTitle = '';
+          notifMessage = '';
+      }
+      
+      if (notifType.isNotEmpty) {
+        await _notificationRepository.createNotification(
+          userId: order.userId,
+          type: notifType,
+          title: notifTitle,
+          message: notifMessage,
+          relatedId: orderId,
+        );
+      }
+    }
+    
     return result > 0;
   }
 

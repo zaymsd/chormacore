@@ -13,6 +13,7 @@ import '../widgets/stats_card_widget.dart';
 import '../widgets/recent_orders_widget.dart';
 import '../../products/pages/seller_product_list_page.dart';
 import '../../orders/pages/seller_order_list_page.dart';
+import '../../../notifications/providers/notification_provider.dart';
 
 /// Seller dashboard page with statistics and recent orders
 class SellerDashboardPage extends StatefulWidget {
@@ -33,6 +34,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
       if (authProvider.currentUser != null) {
         Provider.of<DashboardProvider>(context, listen: false)
             .setSeller(authProvider.currentUser!.id);
+        Provider.of<NotificationProvider>(context, listen: false)
+            .loadNotifications(authProvider.currentUser!.id);
       }
     });
   }
@@ -200,10 +203,45 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {
-                  // TODO: Open notifications
+              Consumer<NotificationProvider>(
+                builder: (context, notifProvider, _) {
+                  return Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined),
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRoutes.sellerNotifications);
+                        },
+                      ),
+                      if (notifProvider.unreadCount > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              notifProvider.unreadCount > 99 
+                                  ? '99+' 
+                                  : '${notifProvider.unreadCount}',
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
                 },
               ),
             ],

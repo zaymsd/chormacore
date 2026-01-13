@@ -15,6 +15,7 @@ import '../providers/product_list_provider.dart';
 import '../widgets/product_card_widget.dart';
 import '../widgets/category_chip_widget.dart';
 import '../widgets/search_bar_widget.dart';
+import '../../../notifications/providers/notification_provider.dart';
 
 /// Buyer home page with product listing
 class BuyerHomePage extends StatefulWidget {
@@ -41,6 +42,8 @@ class _BuyerHomePageState extends State<BuyerHomePage> {
             .setUser(authProvider.currentUser!.id);
         Provider.of<OrderProvider>(context, listen: false)
             .loadBuyerOrders(authProvider.currentUser!.id);
+        Provider.of<NotificationProvider>(context, listen: false)
+            .loadNotifications(authProvider.currentUser!.id);
       }
     });
   }
@@ -231,15 +234,50 @@ class _BuyerHomePageState extends State<BuyerHomePage> {
                       color: AppColors.white,
                     ),
                   ),
-                  // Notification icon
-                  IconButton(
-                    onPressed: () {
-                      // TODO: Open notifications
+                  // Notification icon with badge
+                  Consumer<NotificationProvider>(
+                    builder: (context, notifProvider, _) {
+                      return Stack(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRoutes.buyerNotifications);
+                            },
+                            icon: const Icon(
+                              Icons.notifications_outlined,
+                              color: AppColors.white,
+                            ),
+                          ),
+                          if (notifProvider.unreadCount > 0)
+                            Positioned(
+                              right: 6,
+                              top: 6,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.error,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  notifProvider.unreadCount > 99 
+                                      ? '99+' 
+                                      : '${notifProvider.unreadCount}',
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
                     },
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: AppColors.white,
-                    ),
                   ),
                 ],
               ),

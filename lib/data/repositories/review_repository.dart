@@ -2,12 +2,15 @@ import 'package:uuid/uuid.dart';
 import '../../core/constants/db_constants.dart';
 import '../database/database_helper.dart';
 import '../models/review_model.dart';
+import '../models/notification_model.dart';
 import 'product_repository.dart';
+import 'notification_repository.dart';
 
 /// Repository for review-related database operations
 class ReviewRepository {
   final DatabaseHelper _db = DatabaseHelper.instance;
   final ProductRepository _productRepository = ProductRepository();
+  final NotificationRepository _notificationRepository = NotificationRepository();
   final Uuid _uuid = const Uuid();
 
   /// Create a new review
@@ -34,6 +37,18 @@ class ReviewRepository {
     
     // Update product rating after adding review
     await _updateProductRating(productId);
+    
+    // Get product to find seller and create notification
+    final product = await _productRepository.getProductById(productId);
+    if (product != null) {
+      await _notificationRepository.createNotification(
+        userId: product.sellerId,
+        type: NotificationType.newReview,
+        title: 'Review Baru',
+        message: 'Seseorang memberikan review untuk ${product.name}',
+        relatedId: productId,
+      );
+    }
 
     return review;
   }

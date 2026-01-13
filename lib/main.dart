@@ -19,6 +19,7 @@ import 'features/buyer/wishlist/providers/wishlist_provider.dart';
 import 'features/seller/dashboard/providers/dashboard_provider.dart';
 import 'features/seller/products/providers/product_management_provider.dart';
 import 'features/seller/orders/providers/seller_order_provider.dart';
+import 'features/notifications/providers/notification_provider.dart';
 
 // Pages
 import 'features/auth/pages/login_page.dart';
@@ -39,6 +40,7 @@ import 'features/seller/orders/pages/seller_order_detail_page.dart';
 import 'features/buyer/orders/pages/add_review_page.dart';
 import 'features/guest/pages/guest_browse_page.dart';
 import 'features/splash/pages/splash_page.dart';
+import 'features/notifications/pages/notification_list_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +72,7 @@ class ChromaCoreApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ProductManagementProvider()),
         ChangeNotifierProvider(create: (_) => SellerOrderProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: 'TechZone - Komputer & Aksesoris',
@@ -109,6 +112,10 @@ class ChromaCoreApp extends StatelessWidget {
               return MaterialPageRoute(builder: (_) => const AddEditProductPage());
             case AppRoutes.sellerOrders:
               return MaterialPageRoute(builder: (_) => const SellerOrderListPage());
+            case AppRoutes.buyerNotifications:
+              return MaterialPageRoute(builder: (_) => const NotificationListPage());
+            case AppRoutes.sellerNotifications:
+              return MaterialPageRoute(builder: (_) => const NotificationListPage());
             default:
               final uri = Uri.parse(settings.name ?? '');
               final pathSegments = uri.pathSegments;

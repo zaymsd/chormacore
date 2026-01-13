@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../../core/constants/db_constants.dart';
 import 'migrations/migration_v1.dart';
+import 'migrations/migration_v2.dart';
 
 /// Database helper singleton for SQLite operations
 class DatabaseHelper {
@@ -31,13 +32,17 @@ class DatabaseHelper {
   Future<void> _createDB(Database db, int version) async {
     await MigrationV1.createTables(db);
     await MigrationV1.seedData(db);
+    // Apply V2 migration for new installations
+    if (version >= 2) {
+      await MigrationV2.migrate(db);
+    }
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     // Handle migrations for future versions
-    // if (oldVersion < 2) {
-    //   await MigrationV2.migrate(db);
-    // }
+    if (oldVersion < 2) {
+      await MigrationV2.migrate(db);
+    }
   }
 
   // ========== Generic CRUD Operations ==========
@@ -155,6 +160,7 @@ class DatabaseHelper {
   /// Delete all data (for testing/reset)
   Future<void> deleteAllData() async {
     final db = await database;
+    await db.delete(DbConstants.tableNotifications);
     await db.delete(DbConstants.tableReviews);
     await db.delete(DbConstants.tableWishlist);
     await db.delete(DbConstants.tableOrderItems);
