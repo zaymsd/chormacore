@@ -43,12 +43,20 @@ class CategoryChipWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              _getIconData(category.icon),
-              size: 18,
-              color: isSelected ? AppColors.white : AppColors.textSecondary,
+            // Use Image.asset instead of Icon
+            Image.asset(
+              _getCategoryImagePath(category.name),
+              width: 24,
+              height: 24,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  Icons.category,
+                  size: 24,
+                  color: isSelected ? AppColors.white : AppColors.textSecondary,
+                );
+              },
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Text(
               category.name,
               style: TextStyles.labelMedium.copyWith(
@@ -61,27 +69,37 @@ class CategoryChipWidget extends StatelessWidget {
     );
   }
 
-  IconData _getIconData(String? iconName) {
-    switch (iconName) {
-      case 'devices':
-        return Icons.devices;
-      case 'man':
-        return Icons.man;
-      case 'woman':
-        return Icons.woman;
-      case 'spa':
-        return Icons.spa;
-      case 'home':
-        return Icons.home;
-      case 'sports_basketball':
-        return Icons.sports_basketball;
-      case 'restaurant':
-        return Icons.restaurant;
-      case 'toys':
-        return Icons.toys;
-      default:
-        return Icons.category;
+  String _getCategoryImagePath(String categoryName) {
+    // Normalize category name
+    final normalized = categoryName.toLowerCase().trim();
+    
+    // Explicit mapping for known mismatches
+    final Map<String, String> categoryMap = {
+      'pc desktop': 'Pcdesktop.png',
+      'desktop': 'Pcdesktop.png',
+      'keyboard mouse': 'keyboarddanmouse.png',
+      'keyboard & mouse': 'keyboarddanmouse.png',
+      'keyboard': 'keyboarddanmouse.png', // Fallback if just keyboard
+      'mouse': 'keyboarddanmouse.png',    // Fallback if just mouse
+      'monitor': 'monitor.png',
+      'printer': 'printer.png',
+      'printer & scanner': 'printer.png', // Exact match from seed data
+      'scanner': 'printer.png',
+      'komponen pc': 'komponen pc.png',
+      'aksesoris': 'aksesoris.png',
+      'audio': 'audio.png',
+      'laptop': 'laptop.png',
+      'networking': 'networking.png',
+      'storage': 'storage.png',
+    };
+
+    if (categoryMap.containsKey(normalized)) {
+      return 'assets/images/category/${categoryMap[normalized]}';
     }
+
+    // Default fallback: try to use the normalized name directly
+    // This handles simple cases like "audio" -> "audio.png"
+    return 'assets/images/category/$normalized.png';
   }
 }
 

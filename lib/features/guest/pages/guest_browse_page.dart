@@ -9,6 +9,7 @@ import '../../buyer/home/providers/product_list_provider.dart';
 import '../../buyer/home/widgets/product_card_widget.dart';
 import '../../buyer/home/widgets/category_chip_widget.dart';
 import '../../buyer/home/widgets/search_bar_widget.dart';
+import '../../buyer/home/widgets/banner_slider_widget.dart';
 
 /// Guest browse page for lazy login - allows browsing products without authentication
 class GuestBrowsePage extends StatefulWidget {
@@ -51,10 +52,15 @@ class _GuestBrowsePageState extends State<GuestBrowsePage> {
                 child: _buildHeader(),
               ),
               
+              // Banner Slider
+              const SliverToBoxAdapter(
+                child: BannerSliderWidget(),
+              ),
+
               // Search Bar
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SearchBarWidget(
                     controller: _searchController,
                     onChanged: (query) {
@@ -65,6 +71,11 @@ class _GuestBrowsePageState extends State<GuestBrowsePage> {
                 ),
               ),
               
+              // Spacing
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 16),
+              ),
+
               // Categories
               SliverToBoxAdapter(
                 child: Consumer<ProductListProvider>(

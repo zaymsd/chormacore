@@ -10,6 +10,8 @@ import '../../../core/routes/app_routes.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/password_field_widget.dart';
 
+import 'package:lottie/lottie.dart';
+
 /// Register page for new user registration
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -73,8 +75,9 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        forceMaterialTransparency: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -86,30 +89,51 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Consumer<AuthProvider>(
           builder: (context, authProvider, _) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Animation or Logo
+                     SizedBox(
+                        height: 120,
+                        child: Lottie.asset(
+                          'assets/animations/shopping_cart.json',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+
                     // Title
                     Text(
                       'Buat Akun Baru',
-                      style: TextStyles.h3,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Daftar untuk mulai berbelanja atau berjualan',
-                      style: TextStyles.bodyMedium.copyWith(
+                      'Lengkapi data untuk mendaftar',
+                      style: TextStyle(
+                        fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
                     
                     // Role Selection
                     Text(
                       'Daftar sebagai',
-                      style: TextStyles.labelMedium,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -144,11 +168,27 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 24),
                     
                     // Name field
-                    CustomTextField(
-                      label: 'Nama Lengkap',
-                      hint: 'Masukkan nama lengkap',
+                    TextFormField(
                       controller: _nameController,
-                      prefixIcon: Icons.person_outline,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Nama Lengkap',
+                        prefixIcon: const Icon(Icons.person_outline, color: AppColors.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
                       validator: Validators.validateName,
                       textInputAction: TextInputAction.next,
                       textCapitalization: TextCapitalization.words,
@@ -156,41 +196,111 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 16),
                     
                     // Email field
-                    CustomTextField(
-                      label: 'Email',
-                      hint: 'Masukkan email',
+                    TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
                       validator: Validators.validateEmail,
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
                     
                     // Phone field
-                    CustomTextField(
-                      label: 'Nomor Telepon (Opsional)',
-                      hint: 'Contoh: 08123456789',
+                    TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      prefixIcon: Icons.phone_outlined,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Nomor Telepon (Opsional)',
+                        prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
                     
                     // Password field
-                    PasswordFieldWidget(
+                    TextFormField(
                       controller: _passwordController,
+                      obscureText: true,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
                       validator: Validators.validatePassword,
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
                     
                     // Confirm password field
-                    PasswordFieldWidget(
+                    TextFormField(
                       controller: _confirmPasswordController,
-                      label: 'Konfirmasi Password',
-                      hint: 'Masukkan ulang password',
+                      obscureText: true,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Konfirmasi Password',
+                        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
                       validator: (value) => Validators.validateConfirmPassword(
                         value, 
                         _passwordController.text,
@@ -200,10 +310,36 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 32),
                     
                     // Submit button
-                    CustomButton(
-                      text: 'Daftar',
-                      onPressed: _handleRegister,
-                      isLoading: authProvider.isLoading,
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: authProvider.isLoading ? null : _handleRegister,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: authProvider.isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'DAFTAR',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     
@@ -214,17 +350,17 @@ class _RegisterPageState extends State<RegisterPage> {
                         children: [
                           Text(
                             'Sudah punya akun?',
-                            style: TextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
                             ),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: Text(
+                            child: const Text(
                               'Masuk',
-                              style: TextStyles.bodyMedium.copyWith(
+                              style: TextStyle(
                                 color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
@@ -264,25 +400,34 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : Colors.grey.shade200,
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected ? [] : [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Column(
           children: [
             Icon(
               icon,
               size: 32,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              color: isSelected ? AppColors.primary : Colors.grey.shade400,
             ),
             const SizedBox(height: 8),
             Text(
               label,
-              style: TextStyles.labelLarge.copyWith(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? AppColors.primary : Colors.grey.shade600,
               ),
             ),
           ],

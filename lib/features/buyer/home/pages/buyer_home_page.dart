@@ -17,6 +17,7 @@ import '../widgets/product_card_widget.dart';
 import '../widgets/category_chip_widget.dart';
 import '../widgets/search_bar_widget.dart';
 import '../../../notifications/providers/notification_provider.dart';
+import '../widgets/banner_slider_widget.dart';
 
 /// Buyer home page with product listing
 class BuyerHomePage extends StatefulWidget {
@@ -86,10 +87,15 @@ class _BuyerHomePageState extends State<BuyerHomePage> {
             child: _buildHeader(),
           ),
           
+          // Banner Slider
+          const SliverToBoxAdapter(
+            child: BannerSliderWidget(),
+          ),
+
           // Search Bar
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SearchBarWidget(
                 controller: _searchController,
                 onChanged: (query) {
@@ -100,6 +106,11 @@ class _BuyerHomePageState extends State<BuyerHomePage> {
             ),
           ),
           
+          // Spacing
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 16),
+          ),
+
           // Categories
           SliverToBoxAdapter(
             child: Consumer<ProductListProvider>(
