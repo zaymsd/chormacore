@@ -15,6 +15,7 @@ import '../widgets/recent_orders_widget.dart';
 import '../../products/pages/seller_product_list_page.dart';
 import '../../orders/pages/seller_order_list_page.dart';
 import '../../../notifications/providers/notification_provider.dart';
+import '../../../chat/providers/chat_provider.dart';
 
 /// Seller dashboard page with statistics and recent orders
 class SellerDashboardPage extends StatefulWidget {
@@ -37,6 +38,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
             .setSeller(authProvider.currentUser!.id);
         Provider.of<NotificationProvider>(context, listen: false)
             .loadNotifications(authProvider.currentUser!.id);
+        Provider.of<ChatProvider>(context, listen: false)
+            .loadChats(authProvider.currentUser!.id);
       }
     });
   }
@@ -203,6 +206,47 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
                     ),
                   ],
                 ),
+              ),
+              Consumer<ChatProvider>(
+                builder: (context, chatProvider, _) {
+                  return Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRoutes.chatList);
+                        },
+                      ),
+                      if (chatProvider.unreadCount > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              chatProvider.unreadCount > 99 
+                                  ? '99+' 
+                                  : '${chatProvider.unreadCount}',
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
               Consumer<NotificationProvider>(
                 builder: (context, notifProvider, _) {

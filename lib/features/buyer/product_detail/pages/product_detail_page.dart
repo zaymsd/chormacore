@@ -14,6 +14,7 @@ import '../../../../data/repositories/review_repository.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../cart/providers/cart_provider.dart';
 import '../../wishlist/providers/wishlist_provider.dart';
+import '../../../chat/providers/chat_provider.dart';
 
 /// Product detail page for buyer
 class ProductDetailPage extends StatefulWidget {
@@ -170,6 +171,60 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
+  Future<void> _startChatWithSeller() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan login terlebih dahulu')),
+      );
+      Navigator.pushNamed(context, AppRoutes.login);
+      return;
+    }
+
+    if (_product == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tidak dapat memulai chat dengan penjual'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Don't allow seller to chat with themselves
+    if (authProvider.currentUser!.id == _product!.sellerId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anda tidak dapat chat dengan diri sendiri'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+    
+    try {
+      final chat = await chatProvider.startChatWithSeller(
+        authProvider.currentUser!.id,
+        _product!.sellerId,
+      );
+
+      if (chat != null && mounted) {
+        Navigator.pushNamed(context, AppRoutes.getChatDetailRoute(chat.id));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memulai chat: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -282,17 +337,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                           style: TextStyles.labelMedium,
                                         ),
                                         Text(
-                                          'Lihat Toko',
-                                          style: TextStyles.caption.copyWith(color: AppColors.primary),
+                                          'Penjual',
+                                          style: TextStyles.caption.copyWith(color: AppColors.textSecondary),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  OutlinedButton(
-                                    onPressed: () {
-                                      // TODO: Navigate to seller store
-                                    },
-                                    child: const Text('Kunjungi'),
+                                  OutlinedButton.icon(
+                                    onPressed: () => _startChatWithSeller(),
+                                    icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                                    label: const Text('Chat Toko'),
                                   ),
                                 ],
                               ),

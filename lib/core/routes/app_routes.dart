@@ -40,6 +40,10 @@ class AppRoutes {
   static const String buyerNotifications = '/buyer/notifications';
   static const String sellerNotifications = '/seller/notifications';
 
+  // Chat Routes
+  static const String chatList = '/chat';
+  static const String chatDetail = '/chat/:id';
+
   // Search
   static const String search = '/search';
 
@@ -74,6 +78,11 @@ class AppRoutes {
   /// Helper method to get seller product detail route
   static String getSellerProductDetailRoute(String productId) {
     return '/seller/product/$productId';
+  }
+
+  /// Helper method to get chat detail route
+  static String getChatDetailRoute(String chatId) {
+    return '/chat/$chatId';
   }
 
   /// Extract ID from route

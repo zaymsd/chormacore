@@ -4,7 +4,7 @@ class DbConstants {
 
   // Database Info
   static const String databaseName = 'chromacore_marketplace.db';
-  static const int databaseVersion = 2;
+  static const int databaseVersion = 3;
 
   // Table Names
   static const String tableUsers = 'users';
@@ -16,9 +16,12 @@ class DbConstants {
   static const String tableWishlist = 'wishlist';
   static const String tableReviews = 'reviews';
   static const String tableNotifications = 'notifications';
+  static const String tableChats = 'chats';
+  static const String tableChatMessages = 'chat_messages';
 
   // Common Column Names
   static const String columnId = 'id';
   static const String columnCreatedAt = 'created_at';
   static const String columnUpdatedAt = 'updated_at';
 }
+

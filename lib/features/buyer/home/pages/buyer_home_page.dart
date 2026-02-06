@@ -17,6 +17,7 @@ import '../widgets/product_card_widget.dart';
 import '../widgets/category_chip_widget.dart';
 import '../widgets/search_bar_widget.dart';
 import '../../../notifications/providers/notification_provider.dart';
+import '../../../chat/providers/chat_provider.dart';
 import '../widgets/banner_slider_widget.dart';
 
 /// Buyer home page with product listing
@@ -46,6 +47,8 @@ class _BuyerHomePageState extends State<BuyerHomePage> {
             .loadBuyerOrders(authProvider.currentUser!.id);
         Provider.of<NotificationProvider>(context, listen: false)
             .loadNotifications(authProvider.currentUser!.id);
+        Provider.of<ChatProvider>(context, listen: false)
+            .loadChats(authProvider.currentUser!.id);
       }
     });
   }
@@ -245,6 +248,51 @@ class _BuyerHomePageState extends State<BuyerHomePage> {
                       Icons.shopping_cart_outlined,
                       color: AppColors.white,
                     ),
+                  ),
+                  // Chat icon with badge
+                  Consumer<ChatProvider>(
+                    builder: (context, chatProvider, _) {
+                      return Stack(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRoutes.chatList);
+                            },
+                            icon: const Icon(
+                              Icons.chat_bubble_outline,
+                              color: AppColors.white,
+                            ),
+                          ),
+                          if (chatProvider.unreadCount > 0)
+                            Positioned(
+                              right: 6,
+                              top: 6,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.error,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  chatProvider.unreadCount > 99 
+                                      ? '99+' 
+                                      : '${chatProvider.unreadCount}',
+                                  style: const TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                   // Notification icon with badge
                   Consumer<NotificationProvider>(

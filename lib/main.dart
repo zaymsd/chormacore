@@ -20,6 +20,7 @@ import 'features/seller/dashboard/providers/dashboard_provider.dart';
 import 'features/seller/products/providers/product_management_provider.dart';
 import 'features/seller/orders/providers/seller_order_provider.dart';
 import 'features/notifications/providers/notification_provider.dart';
+import 'features/chat/providers/chat_provider.dart';
 
 // Pages
 import 'features/auth/pages/login_page.dart';
@@ -41,6 +42,8 @@ import 'features/buyer/orders/pages/add_review_page.dart';
 import 'features/guest/pages/guest_browse_page.dart';
 import 'features/splash/pages/splash_page.dart';
 import 'features/notifications/pages/notification_list_page.dart';
+import 'features/chat/pages/chat_list_page.dart';
+import 'features/chat/pages/chat_detail_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +76,7 @@ class ChromaCoreApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProductManagementProvider()),
         ChangeNotifierProvider(create: (_) => SellerOrderProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
         title: 'TechZone - Komputer & Aksesoris',
@@ -116,9 +120,18 @@ class ChromaCoreApp extends StatelessWidget {
               return MaterialPageRoute(builder: (_) => const NotificationListPage());
             case AppRoutes.sellerNotifications:
               return MaterialPageRoute(builder: (_) => const NotificationListPage());
+            case AppRoutes.chatList:
+              return MaterialPageRoute(builder: (_) => const ChatListPage());
             default:
               final uri = Uri.parse(settings.name ?? '');
               final pathSegments = uri.pathSegments;
+              
+              // /chat/:id - Chat Detail
+              if (pathSegments.length >= 2 && pathSegments[0] == 'chat') {
+                return MaterialPageRoute(
+                  builder: (_) => ChatDetailPage(chatId: pathSegments[1]),
+                );
+              }
               
               if (pathSegments.length >= 3) {
                 final section = pathSegments[0];

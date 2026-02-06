@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   // App Info
-  static const String appName = 'TechZone';
+  static const String appName = 'ChormaCore';
   static const String appVersion = '1.0.0';
   static const String appDescription = 'Toko Komputer & Aksesoris Terlengkap';
 

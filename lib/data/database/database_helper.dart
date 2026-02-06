@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import '../../core/constants/db_constants.dart';
 import 'migrations/migration_v1.dart';
 import 'migrations/migration_v2.dart';
+import 'migrations/migration_v3.dart';
 
 /// Database helper singleton for SQLite operations
 class DatabaseHelper {
@@ -36,12 +37,20 @@ class DatabaseHelper {
     if (version >= 2) {
       await MigrationV2.migrate(db);
     }
+    // Apply V3 migration for new installations
+    if (version >= 3) {
+      await MigrationV3.migrate(db);
+    }
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     // Handle migrations for future versions
     if (oldVersion < 2) {
       await MigrationV2.migrate(db);
+    }
+    // Apply V3 migration for chat tables
+    if (oldVersion < 3) {
+      await MigrationV3.migrate(db);
     }
   }
 
@@ -160,6 +169,8 @@ class DatabaseHelper {
   /// Delete all data (for testing/reset)
   Future<void> deleteAllData() async {
     final db = await database;
+    await db.delete(DbConstants.tableChatMessages);
+    await db.delete(DbConstants.tableChats);
     await db.delete(DbConstants.tableNotifications);
     await db.delete(DbConstants.tableReviews);
     await db.delete(DbConstants.tableWishlist);
