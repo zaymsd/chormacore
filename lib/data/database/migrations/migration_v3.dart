@@ -1,4 +1,4 @@
-import 'package:sqflite/sqflite.dart';
+gitimport 'package:sqflite/sqflite.dart';
 import '../tables/chat_table.dart';
 import '../tables/chat_message_table.dart';
 

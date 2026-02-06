@@ -98,51 +98,59 @@ class ProductCardWidget extends StatelessWidget {
               ],
             ),
             
-            // Product Info
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product name
-                  Text(
-                    product.name,
-                    style: TextStyles.bodyMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  
-                  // Price
-                  Text(
-                    CurrencyFormatter.format(product.price),
-                    style: TextStyles.priceNormal,
-                  ),
-                  const SizedBox(height: 6),
-                  
-                  // Rating and sold
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        size: 14,
-                        color: AppColors.ratingStar,
+            // Product Info - Wrapped in Expanded to prevent overflow
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Product name
+                    Flexible(
+                      child: Text(
+                        product.name,
+                        style: TextStyles.bodyMedium,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 2),
-                      Text(
-                        product.rating.toStringAsFixed(1),
-                        style: TextStyles.caption,
-                      ),
-                      const SizedBox(width: 8),
-                      if (product.soldCount > 0) ...[
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Price
+                    Text(
+                      CurrencyFormatter.format(product.price),
+                      style: TextStyles.priceNormal,
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Rating and sold
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star,
+                          size: 14,
+                          color: AppColors.ratingStar,
+                        ),
+                        const SizedBox(width: 2),
                         Text(
-                          'Terjual ${product.soldCount}',
+                          product.rating.toStringAsFixed(1),
                           style: TextStyles.caption,
                         ),
+                        const SizedBox(width: 8),
+                        if (product.soldCount > 0) ...[
+                          Flexible(
+                            child: Text(
+                              'Terjual ${product.soldCount}',
+                              style: TextStyles.caption,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
